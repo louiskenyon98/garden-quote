@@ -30,5 +30,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@mapbox/mapbox-gl-draw": "^1.2.0",
+    "@turf/turf": "^5.1.6",
+    "mapbox-gl": "^1.12.0"
   }
 }
