@@ -1,10 +1,10 @@
 import React, {useEffect, useState, useRef} from 'react';
 import mapboxgl from 'mapbox-gl';
-import './MapLoad.css';
+import './Map.css';
 
 mapboxgl.accessToken = "pk.eyJ1Ijoia2VueW9ubCIsImEiOiJja2V3dml4c3gwNTN2MnluMXVqZnh2dG96In0.Rf1jMcyVc831BWikuxhB9g";
 
-const MapLoad = () => {
+const Map = () => {
   const [mapData, setMapData] = useState({
     lng: 5,
     lat: 34,
@@ -41,4 +41,4 @@ const MapLoad = () => {
     </div>
   )
 }
-export default MapLoad;
+export default Map;
