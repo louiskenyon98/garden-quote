@@ -1,4 +1,5 @@
 .sidebarStyle {
+    font-family: "Roboto Thin", sans-serif;
     display: inline-block;
     position: absolute;
     top: 0;
@@ -17,4 +18,16 @@
     right: 0;
     left: 0;
     bottom: 0;
+}
+
+.calculationBox {
+    font-family: "Roboto Thin", sans-serif;
+    height: 75px;
+    width: 150px;
+    position: absolute;
+    bottom: 40px;
+    left: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 15px;
+    text-align: center;
 }
