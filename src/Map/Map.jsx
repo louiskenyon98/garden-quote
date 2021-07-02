@@ -2,6 +2,8 @@ import React, {useEffect, useState, useRef} from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import area from '@turf/area';
+import 'mapbox-gl/dist/mapbox-gl.css'
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 import './Map.css';
 
 mapboxgl.accessToken = "pk.eyJ1Ijoia2VueW9ubCIsImEiOiJja2V3dml4c3gwNTN2MnluMXVqZnh2dG96In0.Rf1jMcyVc831BWikuxhB9g";
@@ -56,6 +58,7 @@ const Map = () => {
     map.on('draw.update', updateArea);
 
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.addControl(new mapboxgl.GeolocateControl(), 'top-right');
     map.on('move', () => {
       setMapData({
         lng: map.getCenter().lng.toFixed(4),
@@ -74,8 +77,8 @@ const Map = () => {
       </div>
       <div className="mapContainer" ref={mapContainerRef}/>
       <div className="calculationBox">
-        <p>Draw a polygon</p>
-        <div id="calculated-area">{areaRender} meters squared</div>
+        <p>Your garden's area:</p>
+        <div id="calculated-area">{areaRender} m<sup>2</sup></div>
       </div>
     </div>
   )
