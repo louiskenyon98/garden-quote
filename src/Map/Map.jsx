@@ -1,10 +1,24 @@
 import React, {useEffect, useState, useRef} from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
+import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
 import area from '@turf/area';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
+import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import './Map.css';
 
 mapboxgl.accessToken = "pk.eyJ1Ijoia2VueW9ubCIsImEiOiJja2V3dml4c3gwNTN2MnluMXVqZnh2dG96In0.Rf1jMcyVc831BWikuxhB9g";
+
+// const geocoder = new MapboxGeocoder({
+//   accessToken: mapboxgl.accessToken,
+//   mapboxgl: mapboxgl
+// })
+
+const geocoderOptions = {
+  accessToken: mapboxgl.accessToken,
+  mapboxgl: mapboxgl
+}
 
 const Map = () => {
   const [mapData, setMapData] = useState({
@@ -56,6 +70,8 @@ const Map = () => {
     map.on('draw.update', updateArea);
 
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.addControl(new mapboxgl.GeolocateControl(), 'top-right');
+    map.addControl(new MapboxGeocoder(geocoderOptions), 'top-left')
     map.on('move', () => {
       setMapData({
         lng: map.getCenter().lng.toFixed(4),
@@ -67,15 +83,15 @@ const Map = () => {
   }, [])
   return (
     <div>
-      <div className='sidebarStyle'>
-        <div>
-          Longitude: {mapData.lng} | Latitude: {mapData.lat} | Zoom: {mapData.zoom}
-        </div>
-      </div>
+      {/*<div className='sidebarStyle'>*/}
+      {/*  <div>*/}
+      {/*    Longitude: {mapData.lng} | Latitude: {mapData.lat} | Zoom: {mapData.zoom}*/}
+      {/*  </div>*/}
+      {/*</div>*/}
       <div className="mapContainer" ref={mapContainerRef}/>
       <div className="calculationBox">
-        <p>Draw a polygon</p>
-        <div id="calculated-area">{areaRender} meters squared</div>
+        <p>Your garden's area:</p>
+        <div id="calculated-area">{areaRender} m<sup>2</sup></div>
       </div>
     </div>
   )
