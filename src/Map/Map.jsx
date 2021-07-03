@@ -89,10 +89,16 @@ const Map = () => {
       {/*  </div>*/}
       {/*</div>*/}
       <div className="mapContainer" ref={mapContainerRef}/>
-      <div className="calculationBox">
-        <p>Your garden's area:</p>
-        <div id="calculated-area">{areaRender} m<sup>2</sup></div>
-      </div>
+
+      {
+        areaRender &&
+        <div className="calculationBox">
+          <p>Your garden's area:</p>
+          <div id="calculated-area">{areaRender} m<sup>2</sup></div>
+        </div>
+      }
+
+
     </div>
   )
 }
