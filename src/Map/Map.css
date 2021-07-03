@@ -31,3 +31,24 @@
     padding: 15px;
     text-align: center;
 }
+
+@media screen and (max-width: 480px) {
+    .mapboxgl-ctrl-group button, span {
+        height: 43px;
+        width: 43px;
+        background-size: cover;
+    }
+    .mapboxgl-ctrl-zoom-in {
+        display: none !important;
+    }
+    .mapboxgl-ctrl-zoom-out {
+        display: none !important;
+    }
+    .mapboxgl-ctrl-compass {
+        display: none !important;
+    }
+}
+
+/*.mapboxgl-ctrl-zoom-in span  {*/
+/*    background-size: cover;*/
+/*}*/
