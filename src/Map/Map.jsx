@@ -8,7 +8,7 @@ import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import './Map.css';
 
-mapboxgl.accessToken = "pk.eyJ1Ijoia2VueW9ubCIsImEiOiJja2V3dml4c3gwNTN2MnluMXVqZnh2dG96In0.Rf1jMcyVc831BWikuxhB9g";
+mapboxgl.accessToken = "pk.eyJ1Ijoia2VueW9ubCIsImEiOiJja3FyMzZyemIwNzBlMm9ub2Y5ZmtlMmVjIn0.ovB8kRsPo1QzoohRq3IF-g";
 
 // const geocoder = new MapboxGeocoder({
 //   accessToken: mapboxgl.accessToken,
