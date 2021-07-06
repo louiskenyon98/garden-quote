@@ -7,13 +7,10 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import './Map.css';
+import continueArrow from '../assets/arrow-right-solid.svg';
+import Modal from '../Modal/Modal';
 
 mapboxgl.accessToken = "pk.eyJ1Ijoia2VueW9ubCIsImEiOiJja3FyMzZyemIwNzBlMm9ub2Y5ZmtlMmVjIn0.ovB8kRsPo1QzoohRq3IF-g";
-
-// const geocoder = new MapboxGeocoder({
-//   accessToken: mapboxgl.accessToken,
-//   mapboxgl: mapboxgl
-// })
 
 const geocoderOptions = {
   accessToken: mapboxgl.accessToken,
@@ -27,6 +24,7 @@ const Map = () => {
     zoom: 2
   });
   const [areaRender, setAreaRender] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const mapContainerRef = useRef(null);
 
@@ -49,15 +47,12 @@ const Map = () => {
     map.addControl(draw);
 
     const updateArea = (e) => {
+      // debugger;
       let data = draw.getAll();
       let answer = document.getElementById('calculated-area');
       if (data.features.length > 0) {
-        // let area = area(data);
         let rounded_area = Math.round(area(data) * 100) / 100;
         setAreaRender(rounded_area);
-        // answer.innerHTML = '<p><strong>' +
-        //   {rounded_area} +
-        //   '</strong></p><p>square meters</p>';
       } else {
         answer.innerHTML = '';
         if (e.type !== 'draw.delete') {
@@ -83,22 +78,25 @@ const Map = () => {
   }, [])
   return (
     <div>
-      {/*<div className='sidebarStyle'>*/}
-      {/*  <div>*/}
-      {/*    Longitude: {mapData.lng} | Latitude: {mapData.lat} | Zoom: {mapData.zoom}*/}
-      {/*  </div>*/}
-      {/*</div>*/}
+      <Modal show={modalVisible} handleClose={() => setModalVisible(false)}>
+        <p>Modal</p>
+      </Modal>
       <div className="mapContainer" ref={mapContainerRef}/>
-
       {
         areaRender &&
         <div className="calculationBox">
           <p>Your garden's area:</p>
-          <div id="calculated-area">{areaRender} m<sup>2</sup></div>
+          <div id="calculated-area">
+            {areaRender} m<sup>2</sup>
+
+          </div>
+          <div className="nextStep">
+            <p>Click here to continue</p>
+            <img style={{cursor: "pointer"}} src={continueArrow} alt="Continue arrow" onClick={() => setModalVisible(true)}/>
+          </div>
+
         </div>
       }
-
-
     </div>
   )
 }
