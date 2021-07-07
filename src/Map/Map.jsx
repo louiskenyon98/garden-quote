@@ -1,6 +1,7 @@
 import React, {useEffect, useState, useRef} from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
+import axios from 'axios';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
 import area from '@turf/area';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -25,8 +26,16 @@ const Map = () => {
   });
   const [areaRender, setAreaRender] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
+  const [mapCoordData, setMapCoordData] = useState();
 
   const mapContainerRef = useRef(null);
+
+  const options = {
+    method: 'GET',
+    url: 'https://api.ambeedata.com/soil/latest/by-lat-lng',
+    params: {lat: mapData.lat, lng: mapData.lng},
+    headers: {'x-api-key': 'AMBEE_API_KEY', 'Content-type': 'application/json'}
+  }
 
   useEffect(() => {
     const map = new mapboxgl.Map({
@@ -47,9 +56,11 @@ const Map = () => {
     map.addControl(draw);
 
     const updateArea = (e) => {
-      // debugger;
+      //todo: set state of area to 0 if the deletion method is called, ensure the area is always up to date
       let data = draw.getAll();
+      // setMapCoordData(data.features[0].geometry.coordinates)
       let answer = document.getElementById('calculated-area');
+      // debugger;
       if (data.features.length > 0) {
         let rounded_area = Math.round(area(data) * 100) / 100;
         setAreaRender(rounded_area);
@@ -60,6 +71,7 @@ const Map = () => {
         }
       }
     };
+
     map.on('draw.create', updateArea);
     map.on('draw.delete', updateArea);
     map.on('draw.update', updateArea);
@@ -76,12 +88,28 @@ const Map = () => {
     })
     return () => map.remove();
   }, [])
+
+  const logCoords = () => {
+    setModalVisible(true)
+    console.log('data', options)
+    axios.request(options).then((response) => {
+      console.log('soil api response', response.data)
+    }).catch((error) => {
+      console.error(error)
+    })
+
+
+  }
+
   return (
     <div>
       <Modal show={modalVisible} handleClose={() => setModalVisible(false)}>
-        <p>Modal</p>
+        <p>Your lawn was {areaRender} m<sup>2</sup>, this will cost
+          you <span>&#163;</span>{Math.round((areaRender * 0.35) * 100) / 100} per month.</p>
+        {/*<button onClick={logCoords}>Click here to log coords</button>*/}
       </Modal>
       <div className="mapContainer" ref={mapContainerRef}/>
+      {/*todo: get location data from polygon on modal click, then call soil data api and get that information.*/}
       {
         areaRender &&
         <div className="calculationBox">
@@ -92,7 +120,8 @@ const Map = () => {
           </div>
           <div className="nextStep">
             <p>Click here to continue</p>
-            <img style={{cursor: "pointer"}} src={continueArrow} alt="Continue arrow" onClick={() => setModalVisible(true)}/>
+            <img style={{cursor: "pointer"}} src={continueArrow} alt="Continue arrow"
+                 onClick={logCoords}/>
           </div>
 
         </div>
