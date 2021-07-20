@@ -1,19 +1,17 @@
 import React, {useEffect, useState, useRef} from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
+import axios from 'axios';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
 import area from '@turf/area';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import './Map.css';
+import continueArrow from '../assets/arrow-right-solid.svg';
+import Modal from '../Modal/Modal';
 
 mapboxgl.accessToken = "pk.eyJ1Ijoia2VueW9ubCIsImEiOiJja3FyMzZyemIwNzBlMm9ub2Y5ZmtlMmVjIn0.ovB8kRsPo1QzoohRq3IF-g";
-
-// const geocoder = new MapboxGeocoder({
-//   accessToken: mapboxgl.accessToken,
-//   mapboxgl: mapboxgl
-// })
 
 const geocoderOptions = {
   accessToken: mapboxgl.accessToken,
@@ -27,8 +25,17 @@ const Map = () => {
     zoom: 2
   });
   const [areaRender, setAreaRender] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [mapCoordData, setMapCoordData] = useState();
 
   const mapContainerRef = useRef(null);
+
+  const options = {
+    method: 'GET',
+    url: 'https://api.ambeedata.com/soil/latest/by-lat-lng',
+    params: {lat: mapData.lat, lng: mapData.lng},
+    headers: {'x-api-key': 'AMBEE_API_KEY', 'Content-type': 'application/json'}
+  }
 
   useEffect(() => {
     const map = new mapboxgl.Map({
@@ -49,15 +56,14 @@ const Map = () => {
     map.addControl(draw);
 
     const updateArea = (e) => {
+      //todo: set state of area to 0 if the deletion method is called, ensure the area is always up to date
       let data = draw.getAll();
+      // setMapCoordData(data.features[0].geometry.coordinates)
       let answer = document.getElementById('calculated-area');
+      // debugger;
       if (data.features.length > 0) {
-        // let area = area(data);
         let rounded_area = Math.round(area(data) * 100) / 100;
         setAreaRender(rounded_area);
-        // answer.innerHTML = '<p><strong>' +
-        //   {rounded_area} +
-        //   '</strong></p><p>square meters</p>';
       } else {
         answer.innerHTML = '';
         if (e.type !== 'draw.delete') {
@@ -65,6 +71,7 @@ const Map = () => {
         }
       }
     };
+
     map.on('draw.create', updateArea);
     map.on('draw.delete', updateArea);
     map.on('draw.update', updateArea);
@@ -81,24 +88,44 @@ const Map = () => {
     })
     return () => map.remove();
   }, [])
+
+  const logCoords = () => {
+    setModalVisible(true)
+    console.log('data', options)
+    axios.request(options).then((response) => {
+      console.log('soil api response', response.data)
+    }).catch((error) => {
+      console.error(error)
+    })
+
+
+  }
+
   return (
     <div>
-      {/*<div className='sidebarStyle'>*/}
-      {/*  <div>*/}
-      {/*    Longitude: {mapData.lng} | Latitude: {mapData.lat} | Zoom: {mapData.zoom}*/}
-      {/*  </div>*/}
-      {/*</div>*/}
+      <Modal show={modalVisible} handleClose={() => setModalVisible(false)}>
+        <p>Your lawn was {areaRender} m<sup>2</sup>, this will cost
+          you <span>&#163;</span>{Math.round((areaRender * 0.35) * 100) / 100} per month.</p>
+        {/*<button onClick={logCoords}>Click here to log coords</button>*/}
+      </Modal>
       <div className="mapContainer" ref={mapContainerRef}/>
-
+      {/*todo: get location data from polygon on modal click, then call soil data api and get that information.*/}
       {
         areaRender &&
         <div className="calculationBox">
           <p>Your garden's area:</p>
-          <div id="calculated-area">{areaRender} m<sup>2</sup></div>
+          <div id="calculated-area">
+            {areaRender} m<sup>2</sup>
+
+          </div>
+          <div className="nextStep">
+            <p>Click here to continue</p>
+            <img style={{cursor: "pointer"}} src={continueArrow} alt="Continue arrow"
+                 onClick={logCoords}/>
+          </div>
+
         </div>
       }
-
-
     </div>
   )
 }
