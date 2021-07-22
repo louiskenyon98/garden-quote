@@ -2,6 +2,8 @@ import React, {useEffect, useState, useRef} from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import axios from 'axios';
+import {trackPromise} from "react-promise-tracker";
+import {usePromiseTracker} from "react-promise-tracker";
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder'
 import area from '@turf/area';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -10,12 +12,14 @@ import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import './Map.css';
 import continueArrow from '../assets/arrow-right-solid.svg';
 import Modal from '../Modal/Modal';
+import {soilDescriptions, soilTypes} from "../util/soilTypeDecoder";
 
-mapboxgl.accessToken = "pk.eyJ1Ijoia2VueW9ubCIsImEiOiJja3FyMzZyemIwNzBlMm9ub2Y5ZmtlMmVjIn0.ovB8kRsPo1QzoohRq3IF-g";
+mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN;
 
 const geocoderOptions = {
   accessToken: mapboxgl.accessToken,
-  mapboxgl: mapboxgl
+  mapboxgl: mapboxgl,
+  proximity: {Latitude: 51.081130, Longitude: -1.182660}
 }
 
 const Map = () => {
@@ -26,16 +30,30 @@ const Map = () => {
   });
   const [areaRender, setAreaRender] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
-  const [mapCoordData, setMapCoordData] = useState();
+  const [soilInfo, setSoilInfo] = useState({});
+  const {promiseInProgress} = usePromiseTracker();
 
   const mapContainerRef = useRef(null);
 
-  const options = {
+  const ambeeOptions = {
     method: 'GET',
-    url: 'https://api.ambeedata.com/soil/latest/by-lat-lng',
+    url: process.env.REACT_APP_AMBEE_API_URL,
     params: {lat: mapData.lat, lng: mapData.lng},
-    headers: {'x-api-key': 'AMBEE_API_KEY', 'Content-type': 'application/json'}
+    headers: {
+      'x-api-key': process.env.REACT_APP_AMBEE_API_KEY,
+      'Content-type': 'application/json'
+    }
   }
+
+  const soilgridOptions = {
+    method: 'GET',
+    url: process.env.REACT_APP_SOILGRIDS_API_URL,
+    params: {lon: mapData.lng, lat: mapData.lat, number_classes: 5},
+    headers: {'Content-type': 'application/json'}
+  }
+
+  const {REACT_APP_TEST_VAR} = process.env;
+  console.log(REACT_APP_TEST_VAR)
 
   useEffect(() => {
     const map = new mapboxgl.Map({
@@ -65,8 +83,7 @@ const Map = () => {
         answer.innerHTML = ''
         if (e.type === 'draw.delete') {
           setAreaRender(0);
-        }
-        else if (e.type !== 'draw.delete') {
+        } else if (e.type !== 'draw.delete') {
           alert('Use the draw tools to draw a polygon')
         }
       }
@@ -89,27 +106,55 @@ const Map = () => {
     return () => map.remove();
   }, [])
 
-  const logCoords = () => {
-    setModalVisible(true)
-    console.log('data', options)
-    axios.request(options).then((response) => {
-      console.log('soil api response', response.data)
-    }).catch((error) => {
-      console.error(error)
-    })
+  const getLocalInfoAsync = async () => {
+    //todo: cache previous searches in cookie on users machine, then iterate over this to see if the search has already been made before completing another api call.
+    setModalVisible(true);
+    let soilInfo = {};
+    try {
+      const ambeeResponse = await trackPromise(axios.request(ambeeOptions));
+      soilInfo = {
+        ...soilInfo,
+        temperature: Math.round(ambeeResponse.data.data[0].soil_temperature),
+        moisture: Math.round((ambeeResponse.data.data[0].soil_moisture) * 100) / 100
+      }
+      const soilGridResponse = await trackPromise(axios.request(soilgridOptions));
 
-
+      switch (soilGridResponse && soilGridResponse.data && soilGridResponse.data.wrb_class_name) {
+        case soilTypes.LUVISOLS:
+          soilInfo = {...soilInfo, description: soilDescriptions.LUVISOLS};
+          break;
+        case soilTypes.CAMBISOLS:
+          soilInfo = {...soilInfo, description: soilDescriptions.CAMBISOLS};
+          break;
+        default:
+          console.log('soilgrid data ', soilGridResponse.data)
+      }
+      setSoilInfo(soilInfo)
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   return (
     <div>
       <Modal show={modalVisible} handleClose={() => setModalVisible(false)}>
-        <p>Your lawn was {areaRender} m<sup>2</sup>, this will cost
-          you <span>&#163;</span>{Math.round((areaRender * 0.35) * 100) / 100} per month.</p>
-        {/*<button onClick={logCoords}>Click here to log coords</button>*/}
+        <p>
+          Your lawn was {areaRender} m<sup>2</sup>, this will cost
+          you <span>&#163;</span>{Math.round((areaRender * 0.35) * 100) / 100} per month.
+        </p>
+        <br/>
+
+        {promiseInProgress === true ?
+          <p>Loading detailed soil information</p>
+          :
+          <p>
+            {`${soilInfo.description} the moisture level is ${soilInfo.moisture}% and the soil temperature is currently ${soilInfo.temperature} degrees celsius.`}
+          </p>
+        }
+
+
       </Modal>
       <div className="mapContainer" ref={mapContainerRef}/>
-      {/*todo: get location data from polygon on modal click, then call soil data api and get that information.*/}
       {
         areaRender &&
         <div className="calculationBox">
@@ -120,8 +165,12 @@ const Map = () => {
           </div>
           <div className="nextStep">
             <p>Click here to continue</p>
-            <img style={{cursor: "pointer"}} src={continueArrow} alt="Continue arrow"
-                 onClick={logCoords}/>
+            <img
+              style={{cursor: "pointer"}}
+              src={continueArrow}
+              alt="Continue arrow"
+              onClick={getLocalInfoAsync}
+            />
           </div>
 
         </div>
