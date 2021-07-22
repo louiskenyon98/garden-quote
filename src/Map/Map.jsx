@@ -56,17 +56,17 @@ const Map = () => {
     map.addControl(draw);
 
     const updateArea = (e) => {
-      //todo: set state of area to 0 if the deletion method is called, ensure the area is always up to date
       let data = draw.getAll();
-      // setMapCoordData(data.features[0].geometry.coordinates)
       let answer = document.getElementById('calculated-area');
-      // debugger;
       if (data.features.length > 0) {
         let rounded_area = Math.round(area(data) * 100) / 100;
         setAreaRender(rounded_area);
       } else {
-        answer.innerHTML = '';
-        if (e.type !== 'draw.delete') {
+        answer.innerHTML = ''
+        if (e.type === 'draw.delete') {
+          setAreaRender(0);
+        }
+        else if (e.type !== 'draw.delete') {
           alert('Use the draw tools to draw a polygon')
         }
       }
