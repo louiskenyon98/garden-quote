@@ -2,7 +2,7 @@ import React, {useEffect, useState, useRef} from 'react';
 import mapboxgl from 'mapbox-gl';
 import './Map.css';
 
-mapboxgl.accessToken = "pk.eyJ1Ijoia2VueW9ubCIsImEiOiJja2V3dml4c3gwNTN2MnluMXVqZnh2dG96In0.Rf1jMcyVc831BWikuxhB9g";
+mapboxgl.accessToken = "TOKEN_HERE";
 
 const Map = () => {
   const [mapData, setMapData] = useState({
